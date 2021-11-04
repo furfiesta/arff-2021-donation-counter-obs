@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donation Tracker</title>
+  <script src="./jquery-3.6.0.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+  <style>
+    html {
+      font-family: 'Special Elite', sans-serif;
+      font-size: 5rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    AR$&nbsp;<span id="arff">0</span><span id="charity">0</span><span id="help" style="display:none;">Use ?field=[arff,charity]</span>
+  </div>
+</body>
+<script>
+  let valArff = 0;
+  let topArff = 0;
+  let valCharity = 0;
+  let topCharity = 0;
+  let intervalArff = null;
+  let intervalCharity = null;
+  let valArffUpdating = false;
+  let valCharityUpdating = false;
+  let showArff = false;
+  let showCharity = false;
+
+  function getDonations() {
+    console.log('☄️ Getting donations...')
+    $.ajax({
+      url: 'https://api.furfiesta.com/charity/donatedAmounts',
+      type: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        console.log(data)
+        fillData(data.arff, data.charity);
+      }
+    });
+  }
+  
+  function incrementArff(){
+    console.log('⬆️ Incrementing arff...')
+    if(valArff <= topArff){
+      let random = Math.max((Math.random() * (topArff - valArff))*0.1, 0.1);
+      valArff += random;
+      $('#arff').html(`${valArff.toFixed(2)}`);
+    } else {
+      valArff = topArff;
+      valArffUpdating = false
+      $('#arff').html(`${valArff.toFixed(2)}`);
+      clearInterval(intervalArff);
+    }
+  }
+  
+  function incrementCharity(){
+    console.log('⬆️ Incrementing charity...')
+    if(valCharity <= topCharity){
+      let random = Math.max((Math.random() * (topCharity - valCharity))*0.1,0.1);
+      valCharity += random;
+      $('#charity').html(`${valCharity.toFixed(2)}`);
+    } else {
+      valCharity = topCharity;
+      valCharityUpdating = false
+      $('#charity').html(`${valCharity.toFixed(2)}`);
+      clearInterval(intervalCharity);
+    }
+  }
+
+  function fillData(arff,charity){
+    if(arff > topArff && valArffUpdating == false && showArff){
+      valArffUpdating = true
+      topArff = arff 
+      intervalArff = setInterval(function() {
+        incrementArff()
+      }, 30)
+    }
+    if(charity > topCharity && valCharityUpdating == false && showCharity){
+      varCharityUpdating = true
+      topCharity = charity
+      intervalCharity = setInterval(function(){
+        incrementCharity()
+      }, 30)
+    }
+  }
+
+  $(document).ready(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const myParam = urlParams.get('field');
+    if(myParam == 'arff'){
+      showArff = true;
+      showCharity = false;
+      $('#charity').hide();
+    } else if(myParam == 'charity'){
+      showCharity = true;
+      showArff = false;
+      $('#arff').hide();
+    } else {
+      showArff = false;
+      showCharity = false;
+      $('#arff').hide();
+      $('#charity').hide();
+      $('#help').show();
+    }
+    getDonations()
+    setInterval(function() {
+      getDonations()
+    }, 10000);
+  });
+</script>
+</html>
